@@ -7,6 +7,23 @@ auth = Blueprint('auth', __name__)
 
 @auth.route('/login', methods=["GET","POST"])
 def login():
+    if request.method == "POST":
+        email = request.form.get("email")
+        password = request.form.get("password")
+
+        user = User.query.filter_by(email=email).first()
+        if user:
+            if user.password == password:
+                global login
+                login=True
+                flash("Logged in!")
+            else:
+                flash("Wrong Password")
+                login = False
+        else:
+            flash("wrong email")
+
+
     return render_template("login.html")
 
 @auth.route('/logout')
@@ -21,6 +38,10 @@ def signup():
         password = request.form.get("password")
         password_c = request.form.get("password_c")
 
+        user = User.query.filter_by(email=email).first()
+        if user:
+            flash("User Alredy Exists!")
+
         if len(email) < 4:
             flash("short Email", category='e')
         elif len(name) < 2:
@@ -30,7 +51,7 @@ def signup():
         elif len(password) < 8:
             flash("short password", category='e')
         else:
-            user = User(email=email,name=name,password=generate_password_hash(password,method="sha256"))
+            user = User(email=email,name=name,password=password)
             db.session.add(user)
             db.session.commit()
             flash("Created", category='s')
